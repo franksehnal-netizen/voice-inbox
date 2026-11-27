@@ -20,12 +20,13 @@ iPhone PWA (app/, https://voice-inbox-5l6.pages.dev)
 | Stav nahrávek | `%LOCALAPPDATA%\voice_inbox\state.json` – `new → transcribed → noted → archived`, chyba `failed` |
 | Přepisy | `%LOCALAPPDATA%\voice_inbox\transcripts\<id>.txt` |
 | Úloha | Plánovač úloh → „Voice Inbox Worker“; instalace/změna `worker/install_task.ps1` |
+| Jméno autora pro shrnutí | `%LOCALAPPDATA%\voice_inbox\config.json` – `{"owner": "<jméno ve 2. pádě>"}` (mimo repo; bez něj „autora“) |
 
 - Poznámka `status: needs-summary` (v `nezarazeno`) = shrnutí selhalo; worker to zkouší znovu (6× s odstupem 10 min → 24 h),
   pak ji přesune do domény. Ručně upravenou poznámku (bez textu „Čeká na shrnutí“) už nemění.
 - `status: no-speech` = v nahrávce nebyla řeč.
 - Nahrávka `failed` (3× nečitelné audio) zůstává v `incoming`. Znovu zkusit: `python worker/voice_inbox_worker.py --retry-failed`.
-- Index, `_hot` a log vaultu worker nemění; zapracování do wiki ručně (ae-capture).
+- Index, `_hot` a log vaultu worker nemění; zapracování do wiki vault skillem `voice-notes-ingest` („projdi hlasovky“).
 
 ## Příkazy
 

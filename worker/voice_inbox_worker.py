@@ -65,7 +65,15 @@ SUMMARY_SCHEMA = {
         "related": {"type": "array", "items": {"type": "string"}, "maxItems": 6},
     },
 }
-SYSTEM_PROMPT = """Zpracováváš přepisy hlasových poznámek Franka Sehnala (Praha) do jeho Obsidian vaultu.
+def _owner() -> str:
+    """Jméno autora v 2. pádě (např. „Jana“) z %LOCALAPPDATA%\\voice_inbox\\config.json {"owner": …} – mimo repo."""
+    try:
+        return json.loads((LOCAL / "config.json").read_text("utf-8")).get("owner") or "autora"
+    except (OSError, ValueError):
+        return "autora"
+
+
+SYSTEM_PROMPT = "Zpracováváš přepisy hlasových poznámek " + _owner() + """ do jeho Obsidian vaultu.
 Přepis je automatický (Whisper), může obsahovat chyby v rozpoznání – vykládej ho podle smyslu, nic nevymýšlej.
 
 Domény (pole domain):
