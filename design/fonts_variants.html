@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Voice Inbox – varianty písma</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&family=JetBrains+Mono:wght@300;500;800&family=Inter+Tight:wght@800&family=IBM+Plex+Mono:wght@500&family=Archivo:wdth,wght@125,800&family=Space+Mono:wght@400;700&family=Bebas+Neue&family=DM+Mono:wght@500&family=Instrument+Serif&family=Unbounded:wght@700&family=Inter:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #1b1b1f; font-family: Inter, sans-serif; color: #eee; }
+  #sheet { display: grid; grid-template-columns: repeat(4, 300px); gap: 70px 40px; padding: 48px 56px 70px; width: max-content; }
+  .phone { width: 300px; height: 640px; border-radius: 46px; position: relative; overflow: hidden; background: #070707; color: #efebe3;
+    box-shadow: 0 0 0 8px #0a0a0a, 0 0 0 9px #333, 0 30px 60px #0008; }
+  .island { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 96px; height: 28px; border-radius: 20px; background: #000; }
+  .sb { position: absolute; top: 14px; left: 30px; right: 26px; display: flex; justify-content: space-between; font: 600 14px Inter; }
+  .hd { position: absolute; top: 62px; left: 26px; right: 26px; display: flex; justify-content: space-between; font-size: 11.5px; letter-spacing: 1.2px; text-transform: uppercase;
+    border-bottom: 1px solid #efebe333; padding-bottom: 9px; color: #efebe3cc; }
+  .hd .r { color: #ff3b1f; }
+  .big { position: absolute; top: 94px; left: 22px; line-height: .9; font-variant-numeric: tabular-nums; }
+  .glow { position: absolute; width: 440px; height: 440px; left: -70px; top: 170px; border-radius: 50%; background: radial-gradient(circle, #ff3b1f40 0%, #ff3b1f16 40%, transparent 68%); }
+  .stage { position: absolute; left: 0; right: 0; top: 250px; height: 270px; display: grid; place-items: center; }
+  .stage > * { grid-area: 1/1; }
+  .rg { border-radius: 50%; border: 1px solid #ff3b1f; }
+  .dot { width: 120px; height: 120px; border-radius: 30px; background: #ff3b1f; box-shadow: 0 0 40px #ff3b1f88, 0 0 110px #ff3b1f38; }
+  .ft { position: absolute; bottom: 34px; left: 26px; right: 26px; display: flex; justify-content: space-between; font-size: 11.5px; letter-spacing: 1.2px; text-transform: uppercase; color: #efebe3aa; }
+  .ft b { color: #efebe3; font-weight: inherit; }
+  .msg { position: absolute; bottom: 70px; left: 26px; right: 26px; text-align: center; font-size: 11px; letter-spacing: .3px; color: #efebe399; }
+  .cap { margin-top: 18px; text-align: center; }
+  .cap b { display: block; font: 700 22px Inter; color: #fff; }
+  .cap span { font: 500 13px Inter; color: #888; }
+
+  /* 1 – současná */
+  .v1 .big { font: 700 88px 'Space Grotesk'; letter-spacing: -2.5px; } .v1 .lbl { font-family: 'JetBrains Mono'; font-weight: 500; }
+  /* 2 – švýcarská */
+  .v2 .big { font: 800 92px 'Inter Tight'; letter-spacing: -4px; } .v2 .lbl { font-family: 'IBM Plex Mono'; font-weight: 500; }
+  /* 3 – široká */
+  .v3 .big { font: 800 70px 'Archivo'; font-stretch: 125%; letter-spacing: -2px; } .v3 .lbl { font-family: 'Space Mono'; font-weight: 400; }
+  /* 4 – kondenzovaná */
+  .v4 .big { font: 400 136px 'Bebas Neue'; letter-spacing: 0; top: 86px; line-height: .85; } .v4 .lbl { font-family: 'DM Mono'; font-weight: 500; }
+  /* 5 – editorial serif */
+  .v5 .big { font: 400 118px 'Instrument Serif'; letter-spacing: -3px; top: 84px; } .v5 .lbl { font-family: 'JetBrains Mono'; font-weight: 500; }
+  /* 6 – celé mono */
+  .v6 .big { font: 300 80px 'JetBrains Mono'; letter-spacing: -5px; } .v6 .lbl { font-family: 'JetBrains Mono'; font-weight: 500; }
+  /* 7 – mono tučné */
+  .v7 .big { font: 800 80px 'JetBrains Mono'; letter-spacing: -5px; } .v7 .lbl { font-family: 'JetBrains Mono'; font-weight: 500; }
+  /* 8 – technická zaoblená */
+  .v8 .big { font: 700 66px 'Unbounded'; letter-spacing: -2px; } .v8 .lbl { font-family: 'Space Mono'; font-weight: 400; }
+</style>
+</head>
+<body>
+<div id="sheet"></div>
+<script>
+const V = [
+  ['v1', '1 · Space Grotesk', 'současná · + JetBrains Mono'],
+  ['v2', '2 · Inter Tight', 'švýcarská, neutrální · + IBM Plex Mono'],
+  ['v3', '3 · Archivo Expanded', 'široká, plakátová · + Space Mono'],
+  ['v4', '4 · Bebas Neue', 'kondenzovaná, vysoká · + DM Mono'],
+  ['v5', '5 · Instrument Serif', 'editorial, elegantní · + JetBrains Mono'],
+  ['v6', '6 · JetBrains Mono Light', 'všechno mono, technické'],
+  ['v7', '7 · JetBrains Mono ExtraBold', 'mono, hutné'],
+  ['v8', '8 · Unbounded', 'zaoblená, tech · + Space Mono'],
+];
+const sheet = document.getElementById('sheet');
+for (const [cls, name, sub] of V) {
+  sheet.insertAdjacentHTML('beforeend', `<div><div class="phone ${cls}"><div class="glow"></div><div class="island"></div><div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+    <div class="hd lbl"><span>Voice/Inbox</span><span class="r">● Rec</span></div>
+    <div class="big">01:42</div>
+    <div class="stage"><div class="rg" style="width:176px;height:176px;opacity:.38"></div><div class="rg" style="width:222px;height:222px;opacity:.16"></div><div class="dot"></div></div>
+    <div class="msg lbl">Obnovena přerušená nahrávka · čeká 1</div>
+    <div class="ft lbl"><span>Tap → <b>Stop + Send</b></span><span>Nº 129</span></div></div>
+    <div class="cap"><b>${name}</b><span>${sub}</span></div></div>`);
+}
+</script>
+</body>
+</html>

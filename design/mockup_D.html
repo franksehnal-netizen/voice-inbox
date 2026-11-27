@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Voice Inbox – mockup D (Signal Noir)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;500;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: #1b1b1f; font-family: Inter, sans-serif; color: #eee; }
+  section { display: flex; gap: 36px; align-items: center; padding: 48px 56px 70px; width: 1660px; }
+  .label { width: 230px; flex: none; }
+  .label h2 { font-size: 46px; font-weight: 700; letter-spacing: -1px; }
+  .label h3 { font-size: 20px; font-weight: 500; margin: 6px 0 14px; color: #aaa; }
+  .label p { font-size: 15px; line-height: 1.5; color: #999; }
+  .label .big-ic { margin-top: 26px; width: 150px; height: 150px; filter: drop-shadow(0 14px 28px #0009); }
+  .home { width: 210px; height: 640px; border-radius: 40px; flex: none; position: relative; overflow: hidden;
+    background: linear-gradient(160deg, #3b4a6b, #1d2236 55%, #3a2140); display: grid; place-items: center; }
+  .home .ic { width: 120px; height: 120px; }
+  .home .nm { position: absolute; top: calc(50% + 70px); width: 100%; text-align: center; font-size: 15px; color: #fff; }
+  .home .ghost { position: absolute; width: 60px; height: 60px; border-radius: 15px; background: #ffffff22; }
+  .phone { width: 300px; height: 640px; border-radius: 46px; flex: none; position: relative; overflow: hidden;
+    box-shadow: 0 0 0 8px #0a0a0a, 0 0 0 9px #333, 0 30px 60px #0008; }
+  .sb { position: absolute; top: 14px; left: 30px; right: 26px; display: flex; justify-content: space-between; font: 600 14px Inter; z-index: 5; }
+  .island { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); width: 96px; height: 28px; border-radius: 20px; background: #000; z-index: 6; }
+  .cap { position: absolute; bottom: -34px; width: 100%; text-align: center; font-size: 13px; color: #777; }
+  .wrap { position: relative; }
+  svg { display: block; }
+
+  /* ===== D – SIGNAL NOIR ===== */
+  .D { --red: #ff3b1f; --cream: #efebe3; background: #070707; color: var(--cream); font-family: 'Space Grotesk', sans-serif; }
+  .D .sb { color: var(--cream); }
+  /* jemná záře pod tlačítkem (z B, ale tlumená) */
+  .D .glow { position: absolute; width: 440px; height: 440px; left: -70px; top: 150px; border-radius: 50%;
+    background: radial-gradient(circle, #ff3b1f2e 0%, #ff3b1f10 38%, transparent 66%); }
+  .D .glow.rec { background: radial-gradient(circle, #ff3b1f40 0%, #ff3b1f16 40%, transparent 68%); }
+  .D .glow.ok { background: radial-gradient(circle, #efebe314 0%, #efebe308 38%, transparent 66%); }
+  .D .hd { position: absolute; top: 62px; left: 26px; right: 26px; display: flex; justify-content: space-between;
+    font: 500 11.5px 'JetBrains Mono'; letter-spacing: 1.2px; border-bottom: 1px solid #efebe333; padding-bottom: 9px; color: #efebe3cc; }
+  .D .big { position: absolute; top: 94px; left: 22px; font: 700 88px 'Space Grotesk'; letter-spacing: -2.5px; line-height: .9; font-variant-numeric: tabular-nums; }
+  .D .big.dim { color: #efebe317; }
+  .D .meta { position: absolute; top: 182px; left: 26px; font: 400 11px 'JetBrains Mono'; letter-spacing: 1px; color: #efebe366; }
+  .D .stage { position: absolute; left: 0; right: 0; top: 232px; height: 270px; display: grid; place-items: center; }
+  .D .rg { position: absolute; border-radius: 50%; border: 1px solid var(--red); }
+  .D .dot { width: 176px; height: 176px; border-radius: 50%; background: var(--red); z-index: 2; display: grid; place-items: center;
+    box-shadow: 0 0 0 1px #ff6a4f55 inset, 0 0 34px #ff3b1f66, 0 0 90px #ff3b1f2a; }
+  .D .dot.rec { width: 120px; height: 120px; border-radius: 30px; box-shadow: 0 0 40px #ff3b1f88, 0 0 110px #ff3b1f38; }
+  .D .dot.ok { background: var(--cream); box-shadow: 0 0 34px #efebe322; }
+  .D .strip { position: absolute; left: 0; right: 0; top: 508px; }
+  .D .ft { position: absolute; bottom: 34px; left: 26px; right: 26px; display: flex; justify-content: space-between;
+    font: 500 11.5px 'JetBrains Mono'; letter-spacing: 1.2px; color: #efebe3aa; }
+  .D .ft b { color: var(--cream); font-weight: 500; }
+</style>
+</head>
+<body>
+
+<section id="D">
+  <div class="label"><h2>D</h2><h3>Signal Noir</h3>
+    <p>Tmavá verze C: obří čísla timeru, mono popisky, plochý signální červený kruh. Z B jen tlumená záře a dva tenké kruhy. Při nahrávání nízký, ztlumený pás vlny.</p>
+    <svg class="big-ic" viewBox="0 0 120 120" id="iconBig"></svg></div>
+
+  <div class="wrap"><div class="home"><div class="ghost" style="left:22px;top:60px"></div><div class="ghost" style="left:128px;top:60px"></div><div class="ghost" style="left:22px;top:450px"></div><div class="ghost" style="left:128px;top:450px"></div>
+    <svg class="ic" viewBox="0 0 120 120" id="iconHome"></svg><div class="nm">Voice</div></div><div class="cap">ikona (krém z C)</div></div>
+
+  <!-- čeká -->
+  <div class="wrap"><div class="phone D"><div class="glow"></div><div class="island"></div><div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+    <div class="hd"><span>VOICE/INBOX</span><span>READY</span></div>
+    <div class="big dim">00:00</div>
+    <div class="stage">
+      <div class="rg" style="width:214px;height:214px;opacity:.22"></div>
+      <div class="rg" style="width:258px;height:258px;opacity:.08"></div>
+      <div class="dot"></div></div>
+    <div class="ft"><span>TAP → <b>REC</b></span><span>Nº 128</span></div></div><div class="cap">čeká</div></div>
+
+  <!-- nahrává -->
+  <div class="wrap"><div class="phone D"><div class="glow rec"></div><div class="island"></div><div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+    <div class="hd"><span>VOICE/INBOX</span><span style="color:#ff3b1f">● REC</span></div>
+    <div class="big">01:42</div><div class="meta">48 kHz · AAC · 1,6 MB</div>
+    <div class="stage">
+      <div class="rg" style="width:176px;height:176px;opacity:.38"></div>
+      <div class="rg" style="width:222px;height:222px;opacity:.16"></div>
+      <div class="rg" style="width:266px;height:266px;opacity:.06"></div>
+      <div class="dot rec"></div></div>
+    <svg class="strip" viewBox="0 0 300 40" data-strip="1"></svg>
+    <div class="ft"><span>TAP → <b>STOP + SEND</b></span><span>Nº 129</span></div></div><div class="cap">nahrává</div></div>
+
+  <!-- odesláno -->
+  <div class="wrap"><div class="phone D"><div class="glow ok"></div><div class="island"></div><div class="sb"><span>9:41</span><span>●●● ▮</span></div>
+    <div class="hd"><span>VOICE/INBOX</span><span>SENT ✓</span></div>
+    <div class="big">01:43</div><div class="meta">→ DRIVE · 1,6 MB</div>
+    <div class="stage">
+      <div class="rg" style="width:214px;height:214px;opacity:.16;border-color:#efebe3"></div>
+      <div class="dot ok"><svg width="64" height="64" viewBox="0 0 56 56"><path d="M14 29 L24 39 L43 18" fill="none" stroke="#070707" stroke-width="5" stroke-linecap="square"/></svg></div></div>
+    <div class="ft"><span>PŘEPÍŠE SE NA PC</span><span>Nº 129</span></div></div><div class="cap">odesláno</div></div>
+</section>
+
+<script>
+let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+const NS = 'http://www.w3.org/2000/svg';
+const el = (tag, attrs, parent) => { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent && parent.appendChild(e); return e; };
+const env = (i, n) => 0.35 + 0.65 * Math.abs(Math.sin(i / n * Math.PI * 3.3) * Math.cos(i / n * 7.1));
+
+// decentní pás: nízké tenké čárky, ztlumené; posledních pár červeně + playhead
+document.querySelectorAll('[data-strip]').forEach((s) => {
+  const N = 62;
+  for (let i = 0; i < N; i++) {
+    const h = 2 + 16 * env(i, N) * (0.4 + rnd() * 0.6);
+    const live = i > N - 7;
+    el('rect', { x: 24 + i * 4, y: 20 - h / 2, width: 1.6, height: h, rx: .8, fill: live ? '#ff3b1f' : '#efebe3', 'fill-opacity': live ? .9 : .22 }, s);
+  }
+});
+
+// Ikona = C: krém + červený kruh
+function icon(s) {
+  el('rect', { width: 120, height: 120, rx: 27, fill: '#efebe3' }, s);
+  el('circle', { cx: 60, cy: 64, r: 34, fill: '#ff3b1f' }, s);
+  el('rect', { x: 18, y: 18, width: 84, height: 1.6, fill: '#141414' }, s);
+  const t = el('text', { x: 18, y: 14, 'font-family': 'JetBrains Mono', 'font-size': 8, 'font-weight': 500, fill: '#141414' }, s); t.textContent = 'VOICE/INBOX';
+  const t2 = el('text', { x: 102, y: 14, 'text-anchor': 'end', 'font-family': 'JetBrains Mono', 'font-size': 8, fill: '#ff3b1f' }, s); t2.textContent = '● REC';
+}
+icon(document.getElementById('iconHome'));
+icon(document.getElementById('iconBig'));
+</script>
+</body>
+</html>

@@ -1,0 +1,6 @@
+.wrangler/
+node_modules/
+__pycache__/
+*.pyc
+desktop.ini
+.env*

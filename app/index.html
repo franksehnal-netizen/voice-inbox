@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Voice">
+<meta name="theme-color" content="#070707">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<title>Voice Inbox</title>
+<style>
+  /* Vzhled „Signal Noir“ (design/mockup_D.html): tmavé pozadí, krémové texty, plochý signální červený kruh. */
+  /* Písmo: varianta 8 (design/fonts_variants.html) – Unbounded 700 na timer, Space Mono 400 na popisky. */
+  @font-face { font-family: 'UB'; font-weight: 700; font-display: swap; src: url(fonts/unbounded-700.woff2) format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+  @font-face { font-family: 'UB'; font-weight: 700; font-display: swap; src: url(fonts/unbounded-700-ext.woff2) format('woff2');
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+  @font-face { font-family: 'SM'; font-weight: 400; font-display: swap; src: url(fonts/space-mono-400.woff2) format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+  @font-face { font-family: 'SM'; font-weight: 400; font-display: swap; src: url(fonts/space-mono-400-ext.woff2) format('woff2');
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+
+  :root { color-scheme: dark; --red: #ff3b1f; --cream: #efebe3; --bg: #070707; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; background: var(--bg); color: var(--cream);
+    font-family: 'SM', ui-monospace, Menlo, monospace; overflow: hidden; touch-action: manipulation; }
+  main { position: relative; height: 100%; display: flex; flex-direction: column; overflow: hidden;
+    padding: calc(env(safe-area-inset-top) + 16px) 24px calc(env(safe-area-inset-bottom) + 22px);
+    user-select: none; -webkit-user-select: none; }
+  .mono { font: 400 12px/1.2 'SM', ui-monospace, Menlo, monospace; letter-spacing: .1em; text-transform: uppercase; }
+
+  header { display: none; } /* Frank: čistá obrazovka – bez VOICE/INBOX, stavu i linky */
+  #state.rec { color: var(--red); }
+  #state.err { color: var(--red); }
+
+  #timer { font: 700 clamp(54px, 20.5vw, 100px)/.9 'UB', system-ui, sans-serif; letter-spacing: -.03em; margin: 18px 0 0;
+    white-space: nowrap; text-align: center; padding-right: .03em; /* vyrovná letter-spacing za poslední číslicí */ color: #efebe317; transition: color .3s; }
+  /* Unbounded má dvojtečku nízko (měřeno: střed číslic .38em, dvojtečky .27em) → zvednout o .11em.
+     Číslice v přirozené šířce (pevné buňky dělaly kolem úzké „1“ díru); dvojtečka má stejný okraj z obou stran,
+     takže mezery k inkoustu sousedních číslic jsou vlevo i vpravo stejné. Timer je zarovnaný vlevo – hýbe se jen pravý konec. */
+  /* margin změřen na iPhonu (Safari): .04/.04em dávalo mezery 26/34 px → posun o .0155em doprava */
+  #timer .c { display: inline-block; position: relative; top: -.11em; margin: 0 .0245em 0 .0555em; letter-spacing: 0; }
+  .recording #timer, .sending #timer, .sent #timer { color: var(--cream); }
+
+  #stage { --d: min(58vw, 33vh); flex: 1; min-height: 0; position: relative; display: grid; place-items: center;
+    grid-template: minmax(0, 1fr) / minmax(0, 1fr); /* záře je větší než stage – nesmí roztáhnout stopu mřížky */ }
+  #stage > * { grid-area: 1 / 1; }
+  #glow { width: calc(var(--d) * 2.5); height: calc(var(--d) * 2.5); border-radius: 50%; pointer-events: none;
+    background: radial-gradient(circle, #ff3b1f2e 0%, #ff3b1f10 38%, transparent 66%); transition: background .4s; }
+  .recording #glow { background: radial-gradient(circle, #ff3b1f40 0%, #ff3b1f16 40%, transparent 68%); }
+  .sent #glow { background: radial-gradient(circle, #efebe314 0%, #efebe308 38%, transparent 66%); }
+  .rg { border-radius: 50%; border: 1px solid var(--red); pointer-events: none; transition: all .45s ease; }
+  .r1 { width: calc(var(--d) * 1.22); height: calc(var(--d) * 1.22); opacity: .22; }
+  .r2 { width: calc(var(--d) * 1.47); height: calc(var(--d) * 1.47); opacity: .08; }
+  .r3 { width: calc(var(--d) * 1.51); height: calc(var(--d) * 1.51); opacity: 0; }
+  .recording .r1 { width: var(--d); height: var(--d); opacity: .38; animation: breathe 2.6s ease-in-out infinite; }
+  .recording .r2 { width: calc(var(--d) * 1.26); height: calc(var(--d) * 1.26); opacity: .16; animation: breathe 2.6s ease-in-out .3s infinite; }
+  .recording .r3 { opacity: .06; animation: breathe 2.6s ease-in-out .6s infinite; }
+  @keyframes breathe { 50% { transform: scale(1.025); } }
+  .sent .r1 { border-color: var(--cream); opacity: .16; }
+  .sent .r2, .sent .r3 { opacity: 0; }
+
+  #rec { width: var(--d); height: var(--d); border: 0; background: none; padding: 0; display: grid; place-items: center; cursor: pointer; z-index: 2; }
+  #dot { width: 100%; height: 100%; border-radius: 50%; background: var(--red); display: grid; place-items: center;
+    box-shadow: inset 0 0 0 1px #ff6a4f55, 0 0 34px #ff3b1f66, 0 0 90px #ff3b1f2a;
+    transition: width .28s cubic-bezier(.3,.7,.2,1), height .28s cubic-bezier(.3,.7,.2,1), border-radius .28s, background .3s, box-shadow .3s, transform .12s; }
+  #rec:active #dot { transform: scale(.96); }
+  .recording #dot { width: 68%; height: 68%; border-radius: 17%; box-shadow: 0 0 40px #ff3b1f88, 0 0 110px #ff3b1f38; }
+  .sending #dot { animation: sending 1.2s ease-in-out infinite; }
+  @keyframes sending { 50% { opacity: .55; } }
+  .sent #dot { background: var(--cream); box-shadow: 0 0 34px #efebe322; }
+  #dot svg { width: 36%; opacity: 0; transition: opacity .2s; }
+  .sent #dot svg { opacity: 1; }
+
+  #below { height: 74px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+  .recording #status, .recording #pending { display: none !important; }
+  #status { text-transform: none; letter-spacing: .02em; text-align: center; color: #efebe399; max-width: 320px; }
+  #status.err { color: var(--red); }
+  #pending { color: var(--cream); background: none; border: 1px solid #ff3b1f88; border-radius: 16px; padding: 7px 14px; display: none; }
+
+  footer { display: flex; justify-content: space-between; color: #efebe3aa; }
+  footer b { color: var(--cream); font-weight: 500; }
+</style>
+</head>
+<body>
+<main id="app">
+  <header class="mono"><span>Voice/Inbox</span><span id="state">Ready</span></header>
+  <div id="timer">00:00</div>
+  <div id="stage">
+    <div id="glow"></div>
+    <button id="rec" aria-label="Nahrávat"><div id="dot"><svg viewBox="0 0 56 56"><path d="M14 29 L24 39 L43 18" fill="none" stroke="#070707" stroke-width="5" stroke-linecap="square"/></svg></div></button>
+  </div>
+  <div id="below"><div id="status" class="mono"></div><button id="pending" class="mono"></button></div>
+</main>
+<script>
+'use strict';
+// Voice Inbox – jedno tlačítko: 1. stisk nahrává, 2. stisk ukončí a odešle na Apps Script endpoint (→ Drive voice_inbox/incoming).
+// Odolnost: průběžné bloky (1 s) v IndexedDB → po pádu/zavření se nahrávka obnoví; neodeslané nahrávky čekají ve frontě a odešlou se znovu.
+const ENDPOINT = 'https://script.google.com/macros/s/AKfycbwTSvoiwJWRAsIYMhJIhSlF56CcTfqti_S4fZ0iSNrFMTZBHB8X12Ib7MZx4B2FZSDo/exec';
+
+const $ = (id) => document.getElementById(id);
+const app = $('app'), recBtn = $('rec'), timerEl = $('timer'), statusEl = $('status'), pendingBtn = $('pending');
+const stateEl = $('state');
+
+// ---- token: jednorázově z odkazu #t=..., pak v localStorage ----
+const hashToken = new URLSearchParams(location.hash.slice(1)).get('t');
+if (hashToken) { localStorage.setItem('vi_token', hashToken); history.replaceState(null, '', location.pathname + location.search); }
+const token = () => localStorage.getItem('vi_token');
+const NO_TOKEN = 'Chybí token – klepni na tlačítko a vlož ho.';
+
+// ---- IndexedDB ----
+let dbp;
+function db() {
+  return dbp || (dbp = new Promise((res, rej) => {
+    const r = indexedDB.open('voice_inbox', 1);
+    r.onupgradeneeded = () => {
+      r.result.createObjectStore('chunks', { autoIncrement: true }).createIndex('rid', 'rid');
+      r.result.createObjectStore('pending', { keyPath: 'rid' });
+    };
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  }));
+}
+async function tx(store, mode, fn) {
+  const d = await db();
+  return new Promise((res, rej) => {
+    const t = d.transaction(store, mode);
+    const out = fn(t.objectStore(store));
+    t.oncomplete = () => res(out && 'result' in out ? out.result : undefined);
+    t.onerror = () => rej(t.error);
+  });
+}
+const putChunk = (c) => tx('chunks', 'readwrite', (s) => s.add(c));
+const allChunks = () => tx('chunks', 'readonly', (s) => s.getAll());
+const clearChunks = (rid) => tx('chunks', 'readwrite', (s) => {
+  s.index('rid').openCursor(IDBKeyRange.only(rid)).onsuccess = (e) => { const c = e.target.result; if (c) { c.delete(); c.continue(); } };
+});
+const putPending = (p) => tx('pending', 'readwrite', (s) => s.put(p));
+const allPending = () => tx('pending', 'readonly', (s) => s.getAll());
+const delPending = (rid) => tx('pending', 'readwrite', (s) => s.delete(rid));
+
+// ---- UI ----
+function setStatus(text, cls) { statusEl.textContent = text || ''; statusEl.className = 'mono ' + (cls || ''); }
+// vizuální režim: idle | recording | sending | sent
+const HEAD = { idle: ['Ready', ''], recording: ['● Rec', 'rec'], sending: ['Sending…', ''], sent: ['Sent ✓', ''] };
+let mode = 'idle', sentTimer = null;
+function setMode(m) {
+  mode = m;
+  app.classList.remove('recording', 'sending', 'sent');
+  if (m !== 'idle') app.classList.add(m);
+  stateEl.textContent = HEAD[m][0]; stateEl.className = HEAD[m][1];
+  if (m === 'idle') setTimer('00:00');
+}
+function setTimer(t) {
+  timerEl.innerHTML = [...t].map((ch) => ch === ':' ? '<span class="c">:</span>' : '<span class="d">' + ch + '</span>').join('');
+}
+const fmtDur = (s) => pad(Math.floor(s / 60)) + ':' + pad(s % 60);
+async function refreshPending() {
+  const n = (await allPending()).length;
+  pendingBtn.style.display = n ? 'inline-block' : 'none';
+  pendingBtn.textContent = 'Čeká ' + n + ' · odeslat';
+}
+
+// ---- nahrávání ----
+const pad = (n) => String(n).padStart(2, '0');
+function newRid() {
+  const d = new Date();
+  return d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '-' + pad(d.getHours()) + pad(d.getMinutes()) + pad(d.getSeconds());
+}
+function pickFormat() {
+  const opts = [['audio/mp4', 'm4a'], ['audio/webm;codecs=opus', 'webm'], ['audio/webm', 'webm']];
+  for (const [mime, ext] of opts) if (window.MediaRecorder && MediaRecorder.isTypeSupported(mime)) return { mime, ext };
+  return null;
+}
+
+let rec = null, stream = null, cur = null, tick = null, wakeLock = null;
+
+async function start() {
+  if (!token()) {
+    // iOS: appka z plochy má vlastní úložiště a start_url bez #t= → token se vloží jednou ručně
+    const t = (prompt('Vlož token Voice Inboxu (jednorázově):') || '').trim();
+    if (t) { localStorage.setItem('vi_token', t); setStatus('Token uložen – klepni pro nahrávání.'); flush(); }
+    else setStatus(NO_TOKEN, 'err');
+    return;
+  }
+  const fmt = pickFormat();
+  if (!fmt) { setStatus('Tento prohlížeč neumí nahrávat zvuk.', 'err'); return; }
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: true, autoGainControl: true } });
+  } catch (e) { setStatus('Mikrofon nepovolen: ' + e.message, 'err'); return; }
+  cur = { rid: newRid(), ext: fmt.ext, mime: fmt.mime, chunks: [], seq: 0, t0: Date.now() };
+  localStorage.setItem('vi_active', JSON.stringify({ rid: cur.rid, ext: cur.ext, mime: cur.mime }));
+  rec = new MediaRecorder(stream, { mimeType: fmt.mime, audioBitsPerSecond: 64000 });
+  const mine = cur;
+  rec.ondataavailable = (e) => {
+    if (!e.data || !e.data.size) return;
+    mine.chunks.push(e.data);
+    putChunk({ rid: mine.rid, seq: mine.seq++, blob: e.data }).catch(() => {});
+  };
+  rec.onstop = () => finish(mine);
+  rec.onerror = (e) => setStatus('Chyba nahrávání: ' + (e.error && e.error.message), 'err');
+  rec.start(1000);
+  clearTimeout(sentTimer);
+  setMode('recording');
+  recBtn.setAttribute('aria-label', 'Zastavit a odeslat');
+  setStatus('');
+  setTimer('00:00');
+  tick = setInterval(() => { setTimer(fmtDur(Math.floor((Date.now() - mine.t0) / 1000))); }, 250);
+  try { wakeLock = await navigator.wakeLock.request('screen'); } catch (_) { /* nepodporováno */ }
+}
+
+function stop() {
+  if (rec && rec.state !== 'inactive') rec.stop(); // mikrofon se uvolní až v finish() – po posledním bloku dat
+  clearInterval(tick);
+  setMode('sending'); // timer drží délku nahrávky
+  recBtn.setAttribute('aria-label', 'Nahrávat');
+  if (wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; }
+}
+
+async function finish(r) {
+  if (stream) stream.getTracks().forEach((t) => t.stop());
+  rec = null; stream = null; cur = null;
+  const blob = new Blob(r.chunks, { type: r.mime });
+  if (!blob.size) { setMode('idle'); setStatus('Prázdná nahrávka, nic se neodeslalo.', 'err'); await clearChunks(r.rid); localStorage.removeItem('vi_active'); return; }
+  await putPending({ rid: r.rid, ext: r.ext, mime: r.mime, blob });
+  await clearChunks(r.rid);
+  localStorage.removeItem('vi_active');
+  // nahrávka je bezpečně ve frontě v telefonu → po 1 s zpět červený kruh, odeslání běží na pozadí
+  setMode('sent');
+  clearTimeout(sentTimer);
+  sentTimer = setTimeout(() => { if (mode === 'sent') setMode('idle'); }, 1000);
+  await flush();
+}
+
+// ---- odeslání ----
+function toBase64(blob) {
+  return new Promise((res, rej) => {
+    const fr = new FileReader();
+    fr.onload = () => res(String(fr.result).split(',')[1] || '');
+    fr.onerror = () => rej(fr.error);
+    fr.readAsDataURL(blob);
+  });
+}
+async function upload(p) {
+  const body = JSON.stringify({ token: token(), recording_id: p.rid, ext: p.ext, audio: await toBase64(p.blob) });
+  const ctl = new AbortController();
+  const to = setTimeout(() => ctl.abort(), 180000);
+  try {
+    const r = await fetch(ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body, signal: ctl.signal });
+    const j = await r.json();
+    if (!j.ok || !j.name) throw new Error(j.error || 'neznámá odpověď');
+    return j;
+  } finally { clearTimeout(to); }
+}
+let flushing = false, flushAgain = false;
+async function flush() {
+  if (flushing) { flushAgain = true; return; } // nová nahrávka během odesílání → po dokončení projet frontu znovu
+  flushing = true;
+  try {
+    const list = await allPending();
+    let okN = 0, err = null;
+    for (const p of list) {
+      if (list.length > 1) setStatus('Odesílám ' + p.rid + '…');
+      try { await upload(p); await delPending(p.rid); okN++; }
+      catch (e) { err = e; if (e.message === 'unauthorized') break; }
+    }
+    if (err && err.message === 'unauthorized') {
+      localStorage.removeItem('vi_token'); // špatný token → příští klepnutí si řekne o nový, nahrávky zůstávají ve frontě
+      if (!rec) setMode('idle');
+      setStatus('Špatný token – klepni na tlačítko a vlož ho znovu. Nahrávka je uložená v telefonu.', 'err');
+    } else if (err) {
+      if (!rec) { setMode('idle'); stateEl.textContent = 'Offline'; stateEl.className = 'err'; }
+      setStatus('Neodesláno (' + err.message + '). Nahrávka je uložená v telefonu, zkusím znovu.', 'err');
+    } else if (okN && !rec) {
+      setStatus(''); // úspěch je tichý – čistá obrazovka
+    }
+  } finally {
+    flushing = false;
+    await refreshPending();
+    if (flushAgain) { flushAgain = false; setTimeout(flush, 0); }
+  }
+}
+
+// ---- obnova po pádu / zavření uprostřed nahrávání ----
+async function recover() {
+  const active = JSON.parse(localStorage.getItem('vi_active') || 'null');
+  const chunks = await allChunks();
+  const byRid = {};
+  for (const c of chunks) (byRid[c.rid] = byRid[c.rid] || []).push(c);
+  for (const rid of Object.keys(byRid)) {
+    const parts = byRid[rid].sort((a, b) => a.seq - b.seq).map((c) => c.blob);
+    const meta = active && active.rid === rid ? active : { ext: pickFormat() ? pickFormat().ext : 'm4a', mime: parts[0].type };
+    await putPending({ rid, ext: meta.ext, mime: meta.mime, blob: new Blob(parts, { type: meta.mime }), recovered: true });
+    await clearChunks(rid);
+  }
+  localStorage.removeItem('vi_active');
+  if (Object.keys(byRid).length) setStatus('Obnovena přerušená nahrávka.');
+}
+
+recBtn.addEventListener('click', () => { if (rec) stop(); else start(); });
+pendingBtn.addEventListener('click', flush);
+window.addEventListener('online', flush);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && !rec) flush(); });
+
+(async () => {
+  setMode('idle');
+  if (!token()) setStatus(NO_TOKEN, 'err');
+  await recover();
+  await refreshPending();
+  if (token()) flush();
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+})();
+</script>
+</body>
+</html>
