@@ -50,8 +50,11 @@
     grid-template: minmax(0, 1fr) / minmax(0, 1fr); /* záře je větší než stage – nesmí roztáhnout stopu mřížky */ }
   #stage > * { grid-area: 1 / 1; }
   #glow { width: calc(var(--d) * 2.5); height: calc(var(--d) * 2.5); border-radius: 50%; pointer-events: none;
-    background: radial-gradient(circle, #ff3b1f2e 0%, #ff3b1f10 38%, transparent 66%); transition: background .4s; }
-  .recording #glow { background: radial-gradient(circle, #ff3b1f40 0%, #ff3b1f16 40%, transparent 68%); }
+    background: radial-gradient(circle, #ff3b1f2e 0%, #ff3b1f10 38%, transparent 66%); transition: background .4s, opacity .4s, transform .4s; }
+  /* --lvl 0–1 nastavuje JS podle hlasitosti mikrofonu */
+  .recording #glow { background: radial-gradient(circle, #ff3b1f66 0%, #ff3b1f22 40%, transparent 68%);
+    opacity: calc(.35 + var(--lvl, .3) * .65); transform: scale(calc(.9 + var(--lvl, .3) * .25));
+    transition: background .4s, opacity .1s linear, transform .1s linear; }
   .sent #glow { background: radial-gradient(circle, #efebe314 0%, #efebe308 38%, transparent 66%); }
   .rg { border-radius: 50%; border: 1px solid var(--red); pointer-events: none; transition: all .45s ease; }
   .r1 { width: calc(var(--d) * 1.22); height: calc(var(--d) * 1.22); opacity: .22; }
@@ -165,6 +168,34 @@ async function refreshPending() {
   pendingBtn.textContent = 'Čeká ' + n + ' · odeslat';
 }
 
+// ---- záře reaguje na hlasitost (jen vizuál, na nahrávku nemá vliv) ----
+const glowEl = $('glow');
+let actx = null, raf = null;
+function startGlow(s) {
+  try {
+    actx = new (window.AudioContext || window.webkitAudioContext)();
+    if (actx.state === 'suspended') actx.resume().catch(() => {});
+    const an = actx.createAnalyser(); an.fftSize = 1024;
+    actx.createMediaStreamSource(s).connect(an);
+    const buf = new Float32Array(an.fftSize); let lvl = 0;
+    const loop = () => {
+      raf = requestAnimationFrame(loop);
+      an.getFloatTimeDomainData(buf);
+      let sum = 0; for (let i = 0; i < buf.length; i++) sum += buf[i] * buf[i];
+      const db = 10 * Math.log10(sum / buf.length + 1e-10);      // RMS v dBFS
+      const v = Math.min(1, Math.max(0, (db + 55) / 45));          // −55 dB → 0, −10 dB → 1
+      lvl += (v - lvl) * (v > lvl ? 0.5 : 0.1);                    // rychlý náběh, pomalý dozvuk
+      glowEl.style.setProperty('--lvl', lvl.toFixed(3));
+    };
+    raf = requestAnimationFrame(loop);
+  } catch (_) { stopGlow(); }
+}
+function stopGlow() {
+  if (raf) cancelAnimationFrame(raf); raf = null;
+  if (actx) actx.close().catch(() => {}); actx = null;
+  glowEl.style.removeProperty('--lvl');
+}
+
 // ---- nahrávání ----
 const pad = (n) => String(n).padStart(2, '0');
 function newRid() {
@@ -209,6 +240,7 @@ async function start() {
   recBtn.setAttribute('aria-label', 'Zastavit a odeslat');
   setStatus('');
   setTimer('00:00');
+  startGlow(stream);
   tick = setInterval(() => { setTimer(fmtDur(Math.floor((Date.now() - mine.t0) / 1000))); }, 250);
   try { wakeLock = await navigator.wakeLock.request('screen'); } catch (_) { /* nepodporováno */ }
 }
@@ -216,6 +248,7 @@ async function start() {
 function stop() {
   if (rec && rec.state !== 'inactive') rec.stop(); // mikrofon se uvolní až v finish() – po posledním bloku dat
   clearInterval(tick);
+  stopGlow();
   setMode('sending'); // timer drží délku nahrávky
   recBtn.setAttribute('aria-label', 'Nahrávat');
   if (wakeLock) { wakeLock.release().catch(() => {}); wakeLock = null; }
