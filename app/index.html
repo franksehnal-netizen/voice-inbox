@@ -281,7 +281,9 @@ function toBase64(blob) {
 async function upload(p) {
   const body = JSON.stringify({ token: token(), recording_id: p.rid, ext: p.ext, audio: await toBase64(p.blob) });
   const ctl = new AbortController();
-  const to = setTimeout(() => ctl.abort(), 180000);
+  // limit podle velikosti: 3 min + 1 min na každé 2 MB, max 15 min (dlouhé nahrávky na slabém signálu)
+  const mb = p.blob.size / 1048576;
+  const to = setTimeout(() => ctl.abort(new Error('vypršel čas odesílání')), Math.min(180000 + mb / 2 * 60000, 900000));
   try {
     const r = await fetch(ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body, signal: ctl.signal });
     const j = await r.json();
@@ -297,9 +299,14 @@ async function flush() {
     const list = await allPending();
     let okN = 0, err = null;
     for (const p of list) {
-      if (list.length > 1) setStatus('Odesílám ' + p.rid + '…');
+      // vždy viditelný průběh (i u jediné nahrávky) – velikost + uběhlý čas
+      const label = 'Odesílám' + (list.length > 1 ? ' ' + p.rid : '') + ' (' + (p.blob.size / 1048576).toFixed(1) + ' MB)';
+      const t0 = Date.now();
+      setStatus(label + '… nech aplikaci otevřenou.');
+      const tick = setInterval(() => setStatus(label + ' – ' + Math.round((Date.now() - t0) / 1000) + ' s… nech aplikaci otevřenou.'), 1000);
       try { await upload(p); await delPending(p.rid); okN++; }
       catch (e) { err = e; if (e.message === 'unauthorized') break; }
+      finally { clearInterval(tick); }
     }
     if (err && err.message === 'unauthorized') {
       localStorage.removeItem('vi_token'); // špatný token → příští klepnutí si řekne o nový, nahrávky zůstávají ve frontě
